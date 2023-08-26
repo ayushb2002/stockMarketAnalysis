@@ -1,23 +1,43 @@
 from flask import Flask, jsonify, request
-from apscheduler.schedulers.background import BackgroundScheduler
+import pandas as pd
+from os.path import relpath
+import json
+import numpy as np
+
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
 
 app = Flask(__name__)
-scheduler = BackgroundScheduler()
+STREAM_INDEX = 0
+df = pd.read_csv(relpath('dataset/stream.csv'))
 
 @app.route('/', methods=['GET'])
 def index():
     return jsonify({"message":"Up and runnning"})
 
-i = 0
-
-def increment():
-    global i
-    i += 1
-    print(i)    
-
-scheduler.add_job(increment, 'interval', seconds=3)
+@app.route('/get_minute_data', methods=['GET'])
+def get_minute_data():
+    global STREAM_INDEX
+    data = df.loc[STREAM_INDEX,:]
+    STREAM_INDEX += 1
+    result = {
+        'date': data['date'],
+        'open': data['open'],
+        'close': data['close'],
+        'high': data['high'],
+        'low': data['low'],
+        'volume': data['volume']
+    }
+    
+    result = json.dumps(result, cls=NpEncoder)
+    return jsonify(result)
 
 if __name__ == '__main__':
-    scheduler.start()
     app.run(port=4000, debug=True, use_reloader=False)
-    scheduler.shutdown()
