@@ -50,3 +50,17 @@ $ stop-dfs.sh
 # Hadoop installation guide for ubuntu - 
 <br />
 https://medium.com/@festusmorumbasi/installing-hadoop-on-ubuntu-20-04-4610b6e0391e
+
+## To create a file in hdfs, use command - 
+<br />
+$ hadoop fs -mkdir /folder_name
+$ hadoop fs -touchz /folder_name/file_name.extension
+
+## To set permissions for a file in hdfs, use command - 
+<br />
+$ hadoop fs -chmod  go+w /folder_name/file_name.extension
+$ hadoop fs -setfacl -m user:ayush:rwx /folder_name/file_name.extension
+
+## TO delete a file in hdfs, use command - 
+<br />
+$ hadoop fs -rm -R /folder_name/file_name.extension
