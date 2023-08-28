@@ -10,17 +10,16 @@ consumer = KafkaConsumer(
     value_deserializer=lambda K: json.loads(K.decode('utf-8'))
     )
 
-hdfs_path="hdfs://hadoop:9000/nifty_data/nifty_store.json"
+hdfs_path="hdfs://hadoop:9000/nifty_data/nifty.csv"
 
 if __name__ == "__main__":
     try:
         for data in consumer:
             json_data = json.loads(data.value)
-            print(json_data)
-
+            json_data = json.loads(json_data)
+            csv_string = f"{json_data['date']}, {json_data['open']}, {json_data['close']}, {json_data['low']}, {json_data['high']}, {json_data['volume']}"
             with hdfs.open(hdfs_path, 'at') as f:
-                print("Storing in HDFS!")
-                f.write(f'{json_data} \n')
+                f.write(f'{csv_string} \n')
 
     except KeyboardInterrupt:
         print('Consumer closed!')

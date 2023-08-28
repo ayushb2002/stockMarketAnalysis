@@ -15,8 +15,6 @@ class NpEncoder(json.JSONEncoder):
         return super(NpEncoder, self).default(obj)
 
 app = Flask(__name__)
-STREAM_INDEX = 0
-df = pd.read_csv(relpath('dataset/stream.csv'))
 
 @app.route('/', methods=['GET'])
 def index():
@@ -24,9 +22,10 @@ def index():
 
 @app.route('/get_minute_data', methods=['GET'])
 def get_minute_data():
-    global STREAM_INDEX
-    data = df.loc[STREAM_INDEX,:]
-    STREAM_INDEX += 1
+    df = pd.read_csv(relpath('dataset/stream.csv'))
+    data = df.loc[0]
+    df.drop(index=df.iloc[0].name, inplace=True)
+    df.to_csv(relpath('dataset/stream.csv'))
     result = {
         'date': data['date'],
         'open': data['open'],
@@ -37,6 +36,7 @@ def get_minute_data():
     }
     
     result = json.dumps(result, cls=NpEncoder)
+
     return jsonify(result)
 
 if __name__ == '__main__':

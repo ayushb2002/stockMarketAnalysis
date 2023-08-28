@@ -13,6 +13,8 @@ if __name__ == "__main__":
     try:
         for data in consumer:
             json_data = json.loads(data.value)
+            json_data = json.loads(json_data)
             print(json_data)
+            print(type(json_data))
     except KeyboardInterrupt:
         print('Consumer closed!')

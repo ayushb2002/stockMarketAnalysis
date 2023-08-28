@@ -20,7 +20,7 @@ def get_data_from_api():
     except Exception as e:
         print(e)
 
-scheduler.add_job(get_data_from_api, 'interval', seconds=5)
+scheduler.add_job(get_data_from_api, 'interval', seconds=60)
 
 if __name__ == "__main__":
     scheduler.start()
