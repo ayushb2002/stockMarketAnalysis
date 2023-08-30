@@ -20,7 +20,7 @@ app = Flask(__name__)
 def index():
     return jsonify({"message":"Up and runnning"})
 
-@app.route('/get_minute_data', methods=['GET'])
+@app.route('/get_nifty_minute_data', methods=['GET'])
 def get_minute_data():
     df = pd.read_csv(relpath('dataset/stream.csv'))
     data = df.loc[0]

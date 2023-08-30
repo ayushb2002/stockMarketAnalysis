@@ -3,8 +3,8 @@ import json
 import pydoop.hdfs as hdfs
 
 consumer = KafkaConsumer(
-    'MajorProject', 
-    bootstrap_servers=['localhost:9092'], 
+    'NiftyStream', 
+    bootstrap_servers=['kafka:9092'], 
     auto_offset_reset='latest',
     enable_auto_commit=True,
     value_deserializer=lambda K: json.loads(K.decode('utf-8'))
@@ -18,7 +18,6 @@ if __name__ == "__main__":
             json_data = json.loads(data.value)
             json_data = json.loads(json_data)
             csv_string = f"{json_data['date']}, {json_data['open']}, {json_data['close']}, {json_data['low']}, {json_data['high']}, {json_data['volume']}"
-            print(csv_string)
             with hdfs.open(hdfs_path, 'at') as f:
                 print('Record received, writing to hdfs...')
                 f.write(f'{csv_string} \n')
