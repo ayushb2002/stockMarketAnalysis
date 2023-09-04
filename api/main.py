@@ -25,7 +25,7 @@ def get_minute_data():
     df = pd.read_csv(relpath('dataset/stream.csv'))
     data = df.loc[0]
     df.drop(index=df.iloc[0].name, inplace=True)
-    df.to_csv(relpath('dataset/stream.csv'))
+    df.to_csv(relpath('dataset/stream.csv'), index=False)
     result = {
         'date': data['date'],
         'open': data['open'],
