@@ -66,6 +66,17 @@ $ hadoop fs -chmod  go+w /folder_name/file_name.extension
 <br />
 $ hadoop fs -setfacl -m user:ayush:rwx /folder_name/file_name.extension
 
-## TO delete a file in hdfs, use command - 
+## To delete a file in hdfs, use command - 
 <br />
 $ hadoop fs -rm -R /folder_name/file_name.extension
+
+## To start flink server
+<br />
+$ ./bin/start-cluster.sh
+
+## To stop flink server
+<br />
+$ ./bin/stop-cluster.sh
+
+## To visit flink manager dashboard - 
+http://flink:8081/
