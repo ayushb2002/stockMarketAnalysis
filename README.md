@@ -26,9 +26,9 @@ https://hevodata.com/blog/how-to-install-kafka-on-ubuntu/
 
 ## Kafka topic commands - 
 <br />
-Create - $ ~/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --topic MajorProject --create --partitions 3 --replication-factor 1 <br />
+Create - $ ~/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --topic NiftyStream --create --partitions 3 --replication-factor 1 <br />
 List - $ ~/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list <br />
-Delete - $ ~/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --delete --topic MajorProject
+Delete - $ ~/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --delete --topic NiftyStream
 
 ## To run hadoop CLI, use command - 
 <br />
