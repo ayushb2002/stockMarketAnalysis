@@ -21,24 +21,22 @@ services:
       KAFKA_CREATE_TOPICS: "stockMarket:1:1"
     networks:
       - kafka-net
-  app:
-    build: ./backend
-    command: flask --app ./api/main.py --debug run --host=0.0.0.0 --port 4000
-    ports:
-      - "4000:4000"
-    volumes:
-      - .:/app
-    networks:
-      - backend
   react:
     build: ./frontend
-    command: yarn dev
+    container_name: frontend
+    restart: always
     ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
+      - "80:80"
     networks:
       - frontend
+  app:
+    build: ./backend
+    container_name: backend
+    command: flask --app ./api/main.py --debug run --host=0.0.0.0 --port 4000 ; python ./kafka/producer.py
+    ports:
+      - "4000:4000"
+    networks:
+      - backend
 networks:
   kafka-net:
     driver: bridge
