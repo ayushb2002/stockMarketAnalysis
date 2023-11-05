@@ -2,7 +2,7 @@ from kafka import KafkaConsumer
 import json
 
 consumer = KafkaConsumer(
-    'NiftyStream', 
+    'StockStream', 
     bootstrap_servers=['kafka:9092'], 
     auto_offset_reset='latest',
     enable_auto_commit=True,
