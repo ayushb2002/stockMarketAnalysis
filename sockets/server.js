@@ -11,7 +11,7 @@ app.use(cors());
 
 const Consumer = kafka.Consumer;
 const client = new kafka.KafkaClient('kafka:9092');
-const consumer = new Consumer(client, [{ topic: 'StockStream', partition: 0 }], {
+const consumer = new Consumer(client, [{ topic: 'StockStream', partition: 0 }, { topic: 'StockStream', partition: 1 }, { topic: 'StockStream', partition: 2 }], {
   autoCommit: false,
 });
 
@@ -20,8 +20,9 @@ io.on('connection', (socket) => {
   console.log('WebSocket connected');
 
   consumer.on('message', (message) => {
-    // Emit Kafka messages to connected WebSocket clients
-    socket.emit('kafka-message', message);
+    obj = JSON.parse(message['value']);
+    console.log(obj);
+    socket.emit('kafka-message', obj);
   });
 });
 

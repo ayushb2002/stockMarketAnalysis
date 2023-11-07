@@ -6,7 +6,8 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Home from './components/Home';
-import Reader from './components/Reader';
+import RealTime from './components/RealTime';
+import Batch from './components/Batch';
 
 const router = createBrowserRouter([
   {
@@ -14,8 +15,12 @@ const router = createBrowserRouter([
     element: <Home />,
   },
   {
-    path: '/reader',
-    element: <Reader />
+    path: '/realtime',
+    element: <RealTime />
+  },
+  {
+    path: '/batch',
+    element: <Batch />
   }
 ]);
 
