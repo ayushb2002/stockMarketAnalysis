@@ -14,8 +14,17 @@ const Home = () => {
           <a href="/batch"><span>Nifty 50 Batch Data</span></a>
         </div>
       </div>
-      <div className='col-span-4'>
-        
+      <div className='col-span-4 grid grid-cols-5'>
+        <div></div>
+        <div className='col-span-3 text-center'>
+          <div className='p-10'>
+            <span className='text-3xl'>Trading Analysis</span>
+          </div>
+          <div className='p-10'>
+            <img src="https://learn.g2.com/hubfs/Imported%20sitepage%20images/1ZB5giUShe0gw9a6L69qAgsd7wKTQ60ZRoJC5Xq3BIXS517sL6i6mnkAN9khqnaIGzE6FASAusRr7w=w1439-h786.png" alt="#" className='w-[50vw]' />
+          </div>
+        </div>
+        <div></div>
       </div>  
     </div>
   )

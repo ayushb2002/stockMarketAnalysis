@@ -29,8 +29,9 @@ const Batch = () => {
           }
         }
 
-      const batchData = async () => {
-        const res = await axios.get("http://127.0.0.1:4000/batch/niftyData");
+      const resetLimit = async (limit) => {
+        setData([]);
+        const res = await axios.get(`http://127.0.0.1:4000/batch/niftyData/${limit}`);
         res["data"].forEach(el => {
             var obj = {
                 x: el['x'].split('+')[0],
@@ -41,7 +42,7 @@ const Batch = () => {
     }
 
     useEffect(() => {
-        batchData();
+        resetLimit(10);
     }, [])
     
 
@@ -62,8 +63,18 @@ const Batch = () => {
             <div className='p-10 flex justify-center'>
                 <span className='text-2xl'>Batch Data</span>
             </div>
+            <div className='flex justify-end px-5'>
+                <select name="limiting" onChange={(e) => {e.preventDefault();resetLimit(e.target.value)}} className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'>
+                  <option value="10" selected>10</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="500">500</option>
+                  <option value="1000">1000</option>
+                  <option value="2000">2000</option>
+                </select>
+            </div>
             <div className='p-10 flex justify-center'>
-                <Chart options={options} series={[{data: data}]} type="candlestick" height={700} width={1200} />
+                <Chart options={options} series={[{name: "candle", data: data}]} type="candlestick" height={700} width={1200} />
             </div>
         </div>
     </div>

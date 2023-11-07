@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import io from 'socket.io-client';
 import Chart from "react-apexcharts";
+import dayjs from 'dayjs';
 
 const RealTime = () => {
 
@@ -14,13 +15,19 @@ const RealTime = () => {
       align: 'left'
     },
     xaxis: {
-      type: 'datetime'
+      type: 'category',
+      labels: {
+        formatter: function(val) {
+          return dayjs(val).format('MMM DD HH:mm')
+        }
+      }
     },
     yaxis: {
       tooltip: {
         enabled: true
       }
-  }}
+    }
+  }
   const socket = io('http://localhost:3000', { transports : ['websocket'] });
 
   useEffect(() => { 
@@ -49,37 +56,11 @@ const RealTime = () => {
         </div>
       </div>
       <div className='col-span-4'>
+      <div className='p-10 flex justify-center'>
+                <span className='text-2xl'>Real Time Data</span>
+            </div>
         <div className='p-10 flex justify-center'>
-
-          <Chart options={options} series={[{data: data}]} type="candlestick" height={600} width={1100} />
-
-        </div>
-        <div className='p-10 flex justify-center'>
-          <table className='table-auto'>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Open</th>
-                <th>High</th>
-                <th>Low</th>
-                <th>Close</th>
-              </tr>
-            </thead>
-            <tbody>
-            {
-              data.map((dp, index) => (
-                <tr key={index}>
-                  <td>{dp.x}</td>
-                  <td>{dp.y[0]}</td>
-                  <td>{dp.y[1]}</td>
-                  <td>{dp.y[2]}</td>
-                  <td>{dp.y[3]}</td>
-                </tr>
-              ))
-            }
-            </tbody>
-          </table>
-
+          <Chart options={options} series={[{data: data}]} type="candlestick" height={700} width={1200} />
         </div>
       </div>  
     </div>

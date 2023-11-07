@@ -21,6 +21,7 @@ if __name__ == "__main__":
             with hdfs.open(hdfs_path, 'at') as f:
                 print('Record received, writing to hdfs...')
                 f.write(f'{csv_string} \n')
+                f.close()
 
     except KeyboardInterrupt:
         print('Consumer closed!')

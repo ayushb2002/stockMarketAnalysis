@@ -44,23 +44,25 @@ def get_minute_data():
 
     return jsonify(result)
 
-@app.route('/batch/niftyData', methods=['GET'])
-def get_csv_data():
+@app.route('/batch/niftyData/<param>', methods=['GET'])
+def get_csv_data(param):
     try:
         with hdfs.open(hdfs_path, 'r') as f:
             df = pd.read_csv(f)
-        
-        data = []
-
-        for _, row in df[:500].iterrows():
-            data.append({
-                "x": row['date'],  # Assuming 'date' is the column name in your CSV
-                "y": [row['open'], row['high'], row['low'], row['close']]
-            })
-
-        return jsonify(data)
+            
+            data = []
+            param = int(param)
+            for _, row in df[:param].iterrows():
+                data.append({
+                    "x": row['date'],  # Assuming 'date' is the column name in your CSV
+                    "y": [row['open'], row['high'], row['low'], row['close']]
+                })
+            
+            f.close()
+            return jsonify(data)
 
     except Exception as e:
+        print(str(e))
         return str(e), 500
 
 if __name__ == '__main__':
