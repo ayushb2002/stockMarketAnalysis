@@ -3,6 +3,8 @@ import pandas as pd
 from os.path import relpath
 import json
 import numpy as np
+import pydoop.hdfs as hdfs
+from flask_cors import CORS 
 
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -14,7 +16,10 @@ class NpEncoder(json.JSONEncoder):
             return obj.tolist()
         return super(NpEncoder, self).default(obj)
 
+hdfs_path="hdfs://hadoop:9000/nifty_data/nifty.csv"
+
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/', methods=['GET'])
 def index():
@@ -38,6 +43,25 @@ def get_minute_data():
     result = json.dumps(result, cls=NpEncoder)
 
     return jsonify(result)
+
+@app.route('/batch/niftyData', methods=['GET'])
+def get_csv_data():
+    try:
+        with hdfs.open(hdfs_path, 'r') as f:
+            df = pd.read_csv(f)
+        
+        data = []
+
+        for _, row in df[:500].iterrows():
+            data.append({
+                "x": row['date'],  # Assuming 'date' is the column name in your CSV
+                "y": [row['open'], row['high'], row['low'], row['close']]
+            })
+
+        return jsonify(data)
+
+    except Exception as e:
+        return str(e), 500
 
 if __name__ == '__main__':
     app.run(port=4000, debug=True, use_reloader=False)

@@ -1,6 +1,50 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import Chart from "react-apexcharts";
+import dayjs from 'dayjs';
 
 const Batch = () => {
+
+    const [data, setData] = useState([]);
+    const options = {
+        chart: {
+          type: 'candlestick'
+        },
+        title: {
+          text: 'Nifty 50 Data',
+          align: 'left'
+        },
+        xaxis: {
+            type: 'category',
+            labels: {
+              formatter: function(val) {
+                return dayjs(val).format('MMM DD HH:mm')
+              }
+            }
+          },
+          yaxis: {
+            tooltip: {
+              enabled: true
+            }
+          }
+        }
+
+      const batchData = async () => {
+        const res = await axios.get("http://127.0.0.1:4000/batch/niftyData");
+        res["data"].forEach(el => {
+            var obj = {
+                x: el['x'].split('+')[0],
+                y: el['y']
+            }
+            setData((prevdata) => [...prevdata, obj]);
+        });
+    }
+
+    useEffect(() => {
+        batchData();
+    }, [])
+    
+
   return (
     <div className='grid grid-cols-5 min-h-[100vh]'>
         <div className='p-10 bg-cyan-950 text-white text-xl'>
@@ -15,7 +59,12 @@ const Batch = () => {
             </div>
         </div>
         <div className='col-span-4'>
-        
+            <div className='p-10 flex justify-center'>
+                <span className='text-2xl'>Batch Data</span>
+            </div>
+            <div className='p-10 flex justify-center'>
+                <Chart options={options} series={[{data: data}]} type="candlestick" height={700} width={1200} />
+            </div>
         </div>
     </div>
   )
