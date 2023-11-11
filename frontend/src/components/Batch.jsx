@@ -6,7 +6,11 @@ import dayjs from 'dayjs';
 const Batch = () => {
 
     const [data, setData] = useState([]);
-    const options = {
+    const [RSI, setRSI] = useState([]);
+    const [SMA, setSMA] = useState([]);
+    const [MFI, setMFI] = useState([]);
+    const [indicator, setIndicator] = useState('RSI');
+    const candlestickOptions = {
         chart: {
           type: 'candlestick'
         },
@@ -29,15 +33,66 @@ const Batch = () => {
           }
         }
 
+        const lineOptions = {
+          chart: {
+            type: 'line',
+            zoom: {
+              enabled: true
+            }
+          },
+          title: {
+            text: indicator,
+            align: 'left'
+          },
+          dataLabels: {
+            enabled: false
+          },
+          stroke: {
+            curve: 'straight'
+          },
+          xaxis: {
+              type: 'category',
+              labels: {
+                formatter: function(val) {
+                  return dayjs(val).format('MMM DD HH:mm')
+                }
+              }
+            },
+            grid: {
+              row: {
+                colors: ['#f3f3f3', 'transparent'],
+                opacity: 0.5
+              },
+            },
+          }
+
       const resetLimit = async (limit) => {
         setData([]);
+        setRSI([]);
+        setSMA([]);
+        setMFI([]);
         const res = await axios.get(`http://127.0.0.1:4000/batch/niftyData/${limit}`);
         res["data"].forEach(el => {
             var obj = {
                 x: el['x'].split('+')[0],
                 y: el['y']
             }
+            var rsi = {
+              x: el['x'].split('+')[0],
+              y: el['RSI']
+            }
+            var sma = {
+              x: el['x'].split('+')[0],
+              y: el['SMA']
+            }
+            var mfi = {
+              x: el['x'].split('+')[0],
+              y: el['MFI']
+            }
             setData((prevdata) => [...prevdata, obj]);
+            setRSI((prevRSI) => [...prevRSI, rsi]);
+            setSMA((prevSMA) => [...prevSMA, sma]);
+            setMFI((prevMFI) => [...prevMFI, mfi]);
         });
     }
 
@@ -65,7 +120,7 @@ const Batch = () => {
             </div>
             <div className='flex justify-end px-5'>
                 <select name="limiting" onChange={(e) => {e.preventDefault();resetLimit(e.target.value)}} className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'>
-                  <option value="10" selected>10</option>
+                  <option value="10">10</option>
                   <option value="50">50</option>
                   <option value="100">100</option>
                   <option value="500">500</option>
@@ -74,7 +129,22 @@ const Batch = () => {
                 </select>
             </div>
             <div className='p-10 flex justify-center'>
-                <Chart options={options} series={[{name: "candle", data: data}]} type="candlestick" height={700} width={1200} />
+                <Chart options={candlestickOptions} series={[{name: "candle", data: data}]} type="candlestick" height={500} width={1200} />
+            </div>
+            <div className='flex justify-end px-5'>
+                <select name="indicator" onChange={(e) => {e.preventDefault();setIndicator(e.target.value);}} className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'>
+                  <option value="RSI">RSI</option>
+                  <option value="SMA">Simple Moving Average</option>
+                  <option value="MFI">MFI</option>
+                </select>
+            </div>
+            <div className='p-10 flex justify-center'>
+                <Chart options={lineOptions} series={[
+                    {
+                      name: "line", 
+                      data: indicator === "RSI" ? RSI : indicator === "SMA" ? SMA : indicator === "MFI"? MFI : null,
+                    }
+                  ]} type="line" height={300} width={1200} />
             </div>
         </div>
     </div>

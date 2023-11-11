@@ -21,7 +21,6 @@ io.on('connection', (socket) => {
 
   consumer.on('message', (message) => {
     obj = JSON.parse(message['value']);
-    console.log(obj);
     socket.emit('kafka-message', obj);
   });
 });
