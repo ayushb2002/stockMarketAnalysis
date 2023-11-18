@@ -16,7 +16,7 @@ class NpEncoder(json.JSONEncoder):
             return obj.tolist()
         return super(NpEncoder, self).default(obj)
 
-hdfs_path="hdfs://hadoop:9000/nifty_data/nifty.csv"
+hdfs_path="hdfs://hadoop:9900/nifty_data/"
 
 app = Flask(__name__)
 CORS(app)
@@ -153,12 +153,24 @@ def calculate_mfi(data, window=14):
     mfi = mfi.fillna(0).round(3)
     return mfi
 
-@app.route('/batch/niftyData/<param>', methods=['GET'])
-def get_csv_data(param):
+timeMap = {
+    "1_min": "nifty.csv",
+    "5_min": "five_min.csv",
+    "15_min": "fifteen_min.csv",
+    "1_hr": "one_hour.csv",
+    "1_day": "one_day.csv"
+}
+
+@app.route('/batch/niftyData/<timeframe>/<qty>', methods=['GET'])
+def get_csv_data(timeframe, qty):
     try:
-        with hdfs.open(hdfs_path, 'r') as f:
-            df = pd.read_csv(f)
-            df = df.tail(int(param))
+        with hdfs.open(hdfs_path+timeMap[timeframe], 'r') as f:
+            if timeframe == '1_min':
+                df = pd.read_csv(f)
+            else:
+                df = pd.read_csv(f, names=['date', 'open', 'close', 'low', 'high', 'volume'])
+
+            df = df.tail(int(qty))
             df['RSI'] = calculate_rsi(df)
             df['SMA'] = calculate_sma(df)
             df['MFI'] = calculate_mfi(df)
@@ -169,7 +181,8 @@ def get_csv_data(param):
                     "y": [row['open'], row['high'], row['low'], row['close']],
                     "RSI": row['RSI'],
                     "SMA": row['SMA'],
-                    "MFI": row['MFI']
+                    "MFI": row['MFI'],
+                    'volume': row['volume']
                 })
             
             f.close()

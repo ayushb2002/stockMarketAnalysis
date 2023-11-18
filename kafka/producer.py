@@ -3,6 +3,7 @@ from json import dumps
 from apscheduler.schedulers.background import BackgroundScheduler
 import time
 import requests
+import json
 
 producer = KafkaProducer(
     bootstrap_servers=['kafka:9092'], 
@@ -14,8 +15,9 @@ scheduler = BackgroundScheduler()
 def get_1_min_from_api():
     try:
         res = requests.get('http://127.0.0.1:4000/get_nifty_minute_data')
-        res = res.json()
-        producer.send('OneMinStream', dumps(res))
+        res = json.loads(res.json())
+        res['timeframe'] = '1_min'
+        producer.send('StockStream', dumps(res))
         print(res)
     except Exception as e:
         print(e)
@@ -23,8 +25,9 @@ def get_1_min_from_api():
 def get_5_min_from_api():
     try:
         res = requests.get('http://127.0.0.1:4000/get_nifty_five_minute_data')
-        res = res.json()
-        producer.send('FiveMinStream', dumps(res))
+        res = json.loads(res.json())
+        res['timeframe'] = '5_min'
+        producer.send('StockStream', dumps(res))
         print(res)
     except Exception as e:
         print(e)
@@ -32,8 +35,9 @@ def get_5_min_from_api():
 def get_15_min_from_api():
     try:
         res = requests.get('http://127.0.0.1:4000/get_nifty_fifteen_minute_data')
-        res = res.json()
-        producer.send('FifteenMinStream', dumps(res))
+        res = json.loads(res.json())
+        res['timeframe'] = '15_min'
+        producer.send('StockStream', dumps(res))
         print(res)
     except Exception as e:
         print(e)
@@ -41,8 +45,9 @@ def get_15_min_from_api():
 def get_1_hr_from_api():
     try:
         res = requests.get('http://127.0.0.1:4000/get_nifty_one_hour_data')
-        res = res.json()
-        producer.send('OneHrStream', dumps(res))
+        res = json.loads(res.json())
+        res['timeframe'] = '1_hour'
+        producer.send('StockStream', dumps(res))
         print(res)
     except Exception as e:
         print(e)
@@ -50,14 +55,15 @@ def get_1_hr_from_api():
 def get_1_day_from_api():
     try:
         res = requests.get('http://127.0.0.1:4000/get_nifty_one_day_data')
-        res = res.json()
-        producer.send('OneDayStream', dumps(res))
+        res = json.loads(res.json())
+        res['timeframe'] = '1_day'
+        producer.send('StockStream', dumps(res))
         print(res)
     except Exception as e:
         print(e)
 
-scheduler.add_job(get_1_min_from_api, 'interval', seconds=1*60)
-scheduler.add_job(get_5_min_from_api, 'interval', seconds=5*60)
+scheduler.add_job(get_1_min_from_api, 'interval', seconds=1*10)
+scheduler.add_job(get_5_min_from_api, 'interval', seconds=5*6)
 scheduler.add_job(get_15_min_from_api, 'interval', seconds=15*60)
 scheduler.add_job(get_1_hr_from_api, 'interval', seconds=1*60*60)
 scheduler.add_job(get_1_day_from_api, 'interval', seconds=1*60*60*24)

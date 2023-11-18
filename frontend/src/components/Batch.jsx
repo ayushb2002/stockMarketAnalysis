@@ -9,6 +9,8 @@ const Batch = () => {
     const [RSI, setRSI] = useState([]);
     const [SMA, setSMA] = useState([]);
     const [MFI, setMFI] = useState([]);
+    const [timeframe, setTimeframe] = useState('1_min');
+    const [limitVal, setLimitVal] = useState(10);
     const [indicator, setIndicator] = useState('RSI');
     const candlestickOptions = {
         chart: {
@@ -71,7 +73,7 @@ const Batch = () => {
         setRSI([]);
         setSMA([]);
         setMFI([]);
-        const res = await axios.get(`http://127.0.0.1:4000/batch/niftyData/${limit}`);
+        const res = await axios.get(`http://127.0.0.1:4000/batch/niftyData/${timeframe}/${limit}`);
         res["data"].forEach(el => {
             var obj = {
                 x: el['x'].split('+')[0],
@@ -96,6 +98,36 @@ const Batch = () => {
         });
     }
 
+    const resetDataAndLimit = async (tfr) => {
+      setData([]);
+      setRSI([]);
+      setSMA([]);
+      setMFI([]);
+      const res = await axios.get(`http://127.0.0.1:4000/batch/niftyData/${tfr}/${limitVal}`);
+      res["data"].forEach(el => {
+          var obj = {
+              x: el['x'].split('+')[0],
+              y: el['y']
+          }
+          var rsi = {
+            x: el['x'].split('+')[0],
+            y: el['RSI']
+          }
+          var sma = {
+            x: el['x'].split('+')[0],
+            y: el['SMA']
+          }
+          var mfi = {
+            x: el['x'].split('+')[0],
+            y: el['MFI']
+          }
+          setData((prevdata) => [...prevdata, obj]);
+          setRSI((prevRSI) => [...prevRSI, rsi]);
+          setSMA((prevSMA) => [...prevSMA, sma]);
+          setMFI((prevMFI) => [...prevMFI, mfi]);
+      });
+  }
+
     useEffect(() => {
         resetLimit(10);
     }, [])
@@ -119,14 +151,39 @@ const Batch = () => {
                 <span className='text-2xl'>Batch Data</span>
             </div>
             <div className='flex justify-end px-5'>
-                <select name="limiting" onChange={(e) => {e.preventDefault();resetLimit(e.target.value)}} className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'>
+            <select 
+            name="timeframe" 
+            onChange={
+                (e) => {
+                  e.preventDefault();
+                  setTimeframe(e.target.value);
+                  resetDataAndLimit(e.target.value, '10');
+                }
+              } 
+            className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6 mx-5'>
+                  <option value="1_min">1 Minute</option>
+                  <option value="5_min">5 Minute</option>
+                  <option value="15_min">15 Minute</option>
+                  <option value="1_hr">1 Hour</option>
+                  <option value="1_day">1 Day</option>
+                </select>
+            <select 
+                name="limiting" 
+                onChange={
+                  (e) => {
+                      e.preventDefault();
+                      setLimitVal(e.target.value);
+                      resetLimit(e.target.value)
+                    }
+                  } 
+                className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'>
                   <option value="10">10</option>
                   <option value="50">50</option>
                   <option value="100">100</option>
                   <option value="500">500</option>
                   <option value="1000">1000</option>
                   <option value="2000">2000</option>
-                </select>
+            </select>
             </div>
             <div className='p-10 flex justify-center'>
                 <Chart options={candlestickOptions} series={[{name: "candle", data: data}]} type="candlestick" height={500} width={1200} />
