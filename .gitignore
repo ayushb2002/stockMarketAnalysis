@@ -1,3 +1,4 @@
 env/
 dataset/
 flink/flink-*
+model/

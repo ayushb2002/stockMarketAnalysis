@@ -44,6 +44,82 @@ def get_minute_data():
 
     return jsonify(result)
 
+@app.route('/get_nifty_five_minute_data', methods=['GET'])
+def get_five_minute_data():
+    df = pd.read_csv(relpath('dataset/NIFTY_5_min_ISO.csv'))
+    data = df.loc[0]
+    df.drop(index=df.iloc[0].name, inplace=True)
+    df.to_csv(relpath('dataset/NIFTY_5_min_ISO.csv'), index=False)
+    result = {
+        'date': data['time'],
+        'open': data['open'],
+        'close': data['close'],
+        'high': data['high'],
+        'low': data['low'],
+        'volume': data['volume']
+    }
+    
+    result = json.dumps(result, cls=NpEncoder)
+
+    return jsonify(result)
+
+@app.route('/get_nifty_fifteen_minute_data', methods=['GET'])
+def get_fifteen_minute_data():
+    df = pd.read_csv(relpath('dataset/NIFTY_15_min_ISO.csv'))
+    data = df.loc[0]
+    df.drop(index=df.iloc[0].name, inplace=True)
+    df.to_csv(relpath('dataset/NIFTY_15_min_ISO.csv'), index=False)
+    result = {
+        'date': data['time'],
+        'open': data['open'],
+        'close': data['close'],
+        'high': data['high'],
+        'low': data['low'],
+        'volume': data['volume']
+    }
+    
+    result = json.dumps(result, cls=NpEncoder)
+
+    return jsonify(result)
+
+@app.route('/get_nifty_one_hour_data', methods=['GET'])
+def get_one_hour_data():
+    df = pd.read_csv(relpath('dataset/NIFTY_1_hr_ISO.csv'))
+    data = df.loc[0]
+    df.drop(index=df.iloc[0].name, inplace=True)
+    df.to_csv(relpath('dataset/NIFTY_1_hr_ISO.csv'), index=False)
+    result = {
+        'date': data['time'],
+        'open': data['open'],
+        'close': data['close'],
+        'high': data['high'],
+        'low': data['low'],
+        'volume': data['volume']
+    }
+    
+    result = json.dumps(result, cls=NpEncoder)
+
+    return jsonify(result)
+
+@app.route('/get_nifty_one_day_data', methods=['GET'])
+def get_one_day_data():
+    df = pd.read_csv(relpath('dataset/NIFTY_1_day_ISO.csv'))
+    data = df.loc[0]
+    df.drop(index=df.iloc[0].name, inplace=True)
+    df.to_csv(relpath('dataset/NIFTY_1_day_ISO.csv'), index=False)
+    result = {
+        'date': data['time'],
+        'open': data['open'],
+        'close': data['close'],
+        'high': data['high'],
+        'low': data['low'],
+        'volume': data['volume']
+    }
+    
+    result = json.dumps(result, cls=NpEncoder)
+
+    return jsonify(result)
+
 def calculate_rsi(data, window=14):
     delta = data['close'].diff(1)
 
