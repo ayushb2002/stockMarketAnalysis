@@ -7,7 +7,6 @@ import pydoop.hdfs as hdfs
 from flask_cors import CORS 
 import torch
 import torch.nn as nn
-import torch.optim as optim
 from sklearn.preprocessing import StandardScaler
 
 class PriceChangePredictorLSTM(nn.Module):
@@ -20,6 +19,7 @@ class PriceChangePredictorLSTM(nn.Module):
         out, _ = self.lstm(x)
         out = self.fc(out[:, -1, :])
         return out
+    
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -37,13 +37,17 @@ modelMap = {
     "1_day": "model/1_day_final.pth"
 }
 
-def getWRMIndicator(timeframe, df):
+def getWRMIndicator(timeframe, data):
     scaler = StandardScaler()
-    df[['RSI', 'MACD']] = scaler.fit_transform(df[['RSI', 'MACD']])
-    data_tensor = torch.tensor(df[['RSI', 'MACD']].values, dtype=torch.float32)
 
-    input_size = 2 
-    hidden_size = 64 
+    if isinstance(data, pd.Series):
+        data = pd.DataFrame([data])
+
+    data[['RSI', 'MACD']] = scaler.fit_transform(data[['RSI', 'MACD']])
+    data_tensor = torch.tensor(data[['RSI', 'MACD']].values, dtype=torch.float32)
+
+    input_size = 2
+    hidden_size = 64
     num_layers = 2 if timeframe == '5_min' else 4
     loaded_model = PriceChangePredictorLSTM(input_size, hidden_size, num_layers)
     loaded_model.load_state_dict(torch.load(modelMap[timeframe]))
@@ -51,10 +55,9 @@ def getWRMIndicator(timeframe, df):
 
     with torch.no_grad():
         predictions = loaded_model(data_tensor.unsqueeze(1))
-    
-    df['WRM'] = predictions.view(-1).numpy()
 
-    return df
+    print(predictions.item())
+    return predictions.item()
 
 hdfs_path="hdfs://hadoop:9900/nifty_data/"
 
@@ -93,7 +96,7 @@ def get_five_minute_data():
     data = df.loc[0]
     df.drop(index=df.iloc[0].name, inplace=True)
     df.to_csv(relpath('dataset/NIFTY_5_min_ISO.csv'), index=False)
-    data = getWRMIndicator('5_min', df)
+    data['WRM'] = getWRMIndicator('5_min', data)
     result = {
         'date': data['time'],
         'open': data['open'],
@@ -105,7 +108,7 @@ def get_five_minute_data():
         'MACD': data['MACD'],
         'WRM': data['WRM']
     }
-    
+
     result = json.dumps(result, cls=NpEncoder)
 
     return jsonify(result)
@@ -116,7 +119,7 @@ def get_fifteen_minute_data():
     data = df.loc[0]
     df.drop(index=df.iloc[0].name, inplace=True)
     df.to_csv(relpath('dataset/NIFTY_15_min_ISO.csv'), index=False)
-    data = getWRMIndicator('15_min', df)
+    data['WRM'] = getWRMIndicator('15_min', data)
     result = {
         'date': data['time'],
         'open': data['open'],
@@ -139,7 +142,7 @@ def get_one_hour_data():
     data = df.loc[0]
     df.drop(index=df.iloc[0].name, inplace=True)
     df.to_csv(relpath('dataset/NIFTY_1_hr_ISO.csv'), index=False)
-    data = getWRMIndicator('1_hr', df)
+    data['WRM'] = getWRMIndicator('1_hr', data)
     result = {
         'date': data['time'],
         'open': data['open'],
@@ -162,7 +165,7 @@ def get_one_day_data():
     data = df.loc[0]
     df.drop(index=df.iloc[0].name, inplace=True)
     df.to_csv(relpath('dataset/NIFTY_1_day_ISO.csv'), index=False)
-    data = getWRMIndicator('1_day', df)
+    data['WRM'] = getWRMIndicator('1_day', data)
     result = {
         'date': data['time'],
         'open': data['open'],
@@ -248,21 +251,30 @@ def get_csv_data(timeframe, qty):
                     predictions = loaded_model(data_tensor.unsqueeze(1))
                 
                 df['WRM'] = predictions.view(-1).numpy()
-            else:
-                df['WRM'] = 0
 
             data = []
             for _, row in df.iterrows():
-                data.append({
-                    "x": row['date'],  
-                    "y": [row['open'], row['high'], row['low'], row['close']],
-                    "RSI": row['RSI'],
-                    "SMA": row['SMA'],
-                    "MFI": row['MFI'],
-                    "MACD": row['MACD'],
-                    'volume': row['volume'],
-                    "WRM": row['WRM']
-                })
+                if timeframe != "1_min":
+                    data.append({
+                        "x": row['date'],  
+                        "y": [row['open'], row['high'], row['low'], row['close']],
+                        "RSI": row['RSI'],
+                        "SMA": row['SMA'],
+                        "MFI": row['MFI'],
+                        "MACD": row['MACD'],
+                        'volume': row['volume'],
+                        "WRM": row['WRM']
+                    })
+                else:
+                    data.append({
+                        "x": row['date'],  
+                        "y": [row['open'], row['high'], row['low'], row['close']],
+                        "RSI": row['RSI'],
+                        "SMA": row['SMA'],
+                        "MFI": row['MFI'],
+                        "MACD": row['MACD'],
+                        'volume': row['volume'],
+                    })
             
             f.close()
             return jsonify(data)

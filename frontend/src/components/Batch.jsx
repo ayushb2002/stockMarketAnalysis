@@ -10,6 +10,7 @@ const Batch = () => {
     const [SMA, setSMA] = useState([]);
     const [MFI, setMFI] = useState([]);
     const [MACD, setMACD] = useState([]);
+    const [WRM, setWRM] = useState([]);
     const [timeframe, setTimeframe] = useState('1_min');
     const [limitVal, setLimitVal] = useState(10);
     const [indicator, setIndicator] = useState('RSI');
@@ -75,7 +76,9 @@ const Batch = () => {
         setSMA([]);
         setMFI([]);
         setMACD([]);
+        setWRM([]);
         const res = await axios.get(`http://127.0.0.1:4000/batch/niftyData/${timeframe}/${limit}`);
+        console.log(res);
         res["data"].forEach(el => {
             var obj = {
                 x: el['x'].split('+')[0],
@@ -97,6 +100,14 @@ const Batch = () => {
               x: el['x'].split('+')[0],
               y: el['MACD']
             }
+            if(timeframe!='1_min')
+            {  
+              var wrm = {
+                x: el['x'].split('+')[0],
+                y: el['WRM']
+              }
+              setWRM((prevWRM) => [...prevWRM, wrm]);
+            }
             setData((prevdata) => [...prevdata, obj]);
             setRSI((prevRSI) => [...prevRSI, rsi]);
             setSMA((prevSMA) => [...prevSMA, sma]);
@@ -111,7 +122,9 @@ const Batch = () => {
       setSMA([]);
       setMFI([]);
       setMACD([]);
+      setWRM([]);
       const res = await axios.get(`http://127.0.0.1:4000/batch/niftyData/${tfr}/${limitVal}`);
+      console.log(res);
       res["data"].forEach(el => {
           var obj = {
               x: el['x'].split('+')[0],
@@ -132,6 +145,14 @@ const Batch = () => {
           var macd = {
             x: el['x'].split('+')[0],
             y: el['MACD']
+          }
+          if(tfr!='1_min')
+          {
+            var wrm = {
+              x: el['x'].split('+')[0],
+              y: el['WRM']
+            }
+            setWRM((prevWRM) => [...prevWRM, wrm]);
           }
           setData((prevdata) => [...prevdata, obj]);
           setRSI((prevRSI) => [...prevRSI, rsi]);
@@ -207,13 +228,16 @@ const Batch = () => {
                   <option value="SMA">Simple Moving Average</option>
                   <option value="MACD">MACD</option>
                   <option value="MFI">MFI</option>
+                  {(timeframe!='1_min') && (
+                    <option value="WRM">Weighted RSI-MACD</option>
+                  )}
                 </select>
             </div>
             <div className='p-10 flex justify-center'>
                 <Chart options={lineOptions} series={[
                     {
                       name: "line", 
-                      data: indicator === "RSI" ? RSI : indicator === "SMA" ? SMA : indicator === "MFI"? MFI : indicator == "MACD" ? MACD : null,
+                      data: indicator === "RSI" ? RSI : indicator === "SMA" ? SMA : indicator === "MFI"? MFI : indicator == "MACD" ? MACD : indicator == "WRM" ? WRM : null,
                     }
                   ]} type="line" height={300} width={1200} />
             </div>

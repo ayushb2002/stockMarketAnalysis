@@ -6,6 +6,10 @@ import dayjs from 'dayjs';
 const RealTime = () => {
 
   const [data, setData] = useState([]);
+  const [RSI, setRSI] = useState([]);
+  const [MACD, setMACD] = useState([]);
+  const [WRM, setWRM] = useState([]);
+  const [indicator, setIndicator] = useState('RSI');
   const [category, setCategory] = useState('1_min');
   const options = {
     chart: {
@@ -29,6 +33,40 @@ const RealTime = () => {
       }
     }
   }
+
+  const lineOptions = {
+    chart: {
+      type: 'line',
+      zoom: {
+        enabled: true
+      }
+    },
+    title: {
+      text: indicator,
+      align: 'left'
+    },
+    dataLabels: {
+      enabled: false
+    },
+    stroke: {
+      curve: 'straight'
+    },
+    xaxis: {
+        type: 'category',
+        labels: {
+          formatter: function(val) {
+            return dayjs(val).format('MMM DD HH:mm')
+          }
+        }
+      },
+      grid: {
+        row: {
+          colors: ['#f3f3f3', 'transparent'],
+          opacity: 0.5
+        },
+      },
+    }
+
   const socket = io('http://localhost:3000', { transports : ['websocket'] });
 
   useEffect(() => { 
@@ -38,6 +76,24 @@ const RealTime = () => {
         x: message['date'].split('+')[0],
         y: [message['open'], message['high'], message['low'], message['close']]
       }
+      var macd = {
+        x: message['date'].split('+')[0],
+        y: message['MACD']
+      }
+      var rsi = {
+        x: message['date'].split('+')[0],
+        y: message['RSI']
+      }
+      if(message['timeframe']!='1_min')
+      {  
+        var wrm = {
+          x: message['date'].split('+')[0],
+          y: message['WRM']
+        }
+        setWRM((prevWRM) => [...prevWRM, wrm]);
+      }
+      setRSI((prevRSI) => [...prevRSI, rsi]);
+      setMACD((prevMACD) => [...prevMACD, macd]);
       setData((prevdata) => [...prevdata, obj]);
     });
     return () => {
@@ -81,8 +137,25 @@ const RealTime = () => {
                 </select>
             </div>
       <div className='p-10 flex justify-center'>
-          <Chart options={options} series={[{data: data}]} type="candlestick" height={700} width={1200} />
+          <Chart options={options} series={[{data: data}]} type="candlestick" height={500} width={1200} />
       </div>
+      <div className='flex justify-end px-5'>
+                <select name="indicator" onChange={(e) => {e.preventDefault();setIndicator(e.target.value);}} className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'>
+                  <option value="RSI">RSI</option>
+                  <option value="MACD">MACD</option>
+                  {(category!='1_min') && (
+                    <option value="WRM">Weighted RSI-MACD</option>
+                  )}
+                </select>
+            </div>
+            <div className='p-10 flex justify-center'>
+                <Chart options={lineOptions} series={[
+                    {
+                      name: "line", 
+                      data: indicator === "RSI" ? RSI : indicator == "MACD" ? MACD : indicator == "WRM" ? WRM : null,
+                    }
+                  ]} type="line" height={300} width={1200} />
+            </div>
       </div>  
     </div>
   )
