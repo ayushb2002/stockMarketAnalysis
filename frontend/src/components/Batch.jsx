@@ -9,6 +9,7 @@ const Batch = () => {
     const [RSI, setRSI] = useState([]);
     const [SMA, setSMA] = useState([]);
     const [MFI, setMFI] = useState([]);
+    const [MACD, setMACD] = useState([]);
     const [timeframe, setTimeframe] = useState('1_min');
     const [limitVal, setLimitVal] = useState(10);
     const [indicator, setIndicator] = useState('RSI');
@@ -73,6 +74,7 @@ const Batch = () => {
         setRSI([]);
         setSMA([]);
         setMFI([]);
+        setMACD([]);
         const res = await axios.get(`http://127.0.0.1:4000/batch/niftyData/${timeframe}/${limit}`);
         res["data"].forEach(el => {
             var obj = {
@@ -91,10 +93,15 @@ const Batch = () => {
               x: el['x'].split('+')[0],
               y: el['MFI']
             }
+            var macd = {
+              x: el['x'].split('+')[0],
+              y: el['MACD']
+            }
             setData((prevdata) => [...prevdata, obj]);
             setRSI((prevRSI) => [...prevRSI, rsi]);
             setSMA((prevSMA) => [...prevSMA, sma]);
             setMFI((prevMFI) => [...prevMFI, mfi]);
+            setMACD((prevMACD) => [...prevMACD, macd]);
         });
     }
 
@@ -103,6 +110,7 @@ const Batch = () => {
       setRSI([]);
       setSMA([]);
       setMFI([]);
+      setMACD([]);
       const res = await axios.get(`http://127.0.0.1:4000/batch/niftyData/${tfr}/${limitVal}`);
       res["data"].forEach(el => {
           var obj = {
@@ -121,10 +129,15 @@ const Batch = () => {
             x: el['x'].split('+')[0],
             y: el['MFI']
           }
+          var macd = {
+            x: el['x'].split('+')[0],
+            y: el['MACD']
+          }
           setData((prevdata) => [...prevdata, obj]);
           setRSI((prevRSI) => [...prevRSI, rsi]);
           setSMA((prevSMA) => [...prevSMA, sma]);
           setMFI((prevMFI) => [...prevMFI, mfi]);
+          setMACD((prevMACD) => [...prevMACD, macd]);
       });
   }
 
@@ -192,6 +205,7 @@ const Batch = () => {
                 <select name="indicator" onChange={(e) => {e.preventDefault();setIndicator(e.target.value);}} className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6'>
                   <option value="RSI">RSI</option>
                   <option value="SMA">Simple Moving Average</option>
+                  <option value="MACD">MACD</option>
                   <option value="MFI">MFI</option>
                 </select>
             </div>
@@ -199,7 +213,7 @@ const Batch = () => {
                 <Chart options={lineOptions} series={[
                     {
                       name: "line", 
-                      data: indicator === "RSI" ? RSI : indicator === "SMA" ? SMA : indicator === "MFI"? MFI : null,
+                      data: indicator === "RSI" ? RSI : indicator === "SMA" ? SMA : indicator === "MFI"? MFI : indicator == "MACD" ? MACD : null,
                     }
                   ]} type="line" height={300} width={1200} />
             </div>

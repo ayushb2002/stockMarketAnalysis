@@ -62,11 +62,11 @@ def get_1_day_from_api():
     except Exception as e:
         print(e)
 
-scheduler.add_job(get_1_min_from_api, 'interval', seconds=1*10)
-scheduler.add_job(get_5_min_from_api, 'interval', seconds=5*6)
-scheduler.add_job(get_15_min_from_api, 'interval', seconds=15*60)
-scheduler.add_job(get_1_hr_from_api, 'interval', seconds=1*60*60)
-scheduler.add_job(get_1_day_from_api, 'interval', seconds=1*60*60*24)
+scheduler.add_job(get_1_min_from_api, 'interval', seconds=60)
+scheduler.add_job(get_5_min_from_api, 'interval', seconds=5)
+scheduler.add_job(get_15_min_from_api, 'interval', seconds=10)
+scheduler.add_job(get_1_hr_from_api, 'interval', seconds=15)
+scheduler.add_job(get_1_day_from_api, 'interval', seconds=20)
 
 if __name__ == "__main__":
     scheduler.start()

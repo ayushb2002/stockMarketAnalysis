@@ -22,7 +22,7 @@ if __name__ == "__main__":
     try:
         for data in consumer:
             json_data = json.loads(data.value)
-            csv_string = f"{json_data['date']}, {json_data['open']}, {json_data['close']}, {json_data['low']}, {json_data['high']}, {json_data['volume']}"
+            csv_string = f"{json_data['date']}, {json_data['open']}, {json_data['close']}, {json_data['low']}, {json_data['high']}, {json_data['volume']}, {json_data['RSI']}, {json_data['MACD']}"
             with hdfs.open(hdfs_path[json_data['timeframe']], 'at') as f:
                 print('Record received, writing to hdfs...')
                 f.write(f'{csv_string} \n')

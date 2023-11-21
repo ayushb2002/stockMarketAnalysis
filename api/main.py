@@ -5,7 +5,21 @@ import json
 import numpy as np
 import pydoop.hdfs as hdfs
 from flask_cors import CORS 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.preprocessing import StandardScaler
 
+class PriceChangePredictorLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers=1):
+        super(PriceChangePredictorLSTM, self).__init__()
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, 1)
+
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        out = self.fc(out[:, -1, :])
+        return out
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -15,6 +29,32 @@ class NpEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return super(NpEncoder, self).default(obj)
+
+modelMap = {
+    "5_min": "model/5_min_final.pth",
+    "15_min": "model/15_min_final.pth",
+    "1_hr": "model/1_hour_final.pth",
+    "1_day": "model/1_day_final.pth"
+}
+
+def getWRMIndicator(timeframe, df):
+    scaler = StandardScaler()
+    df[['RSI', 'MACD']] = scaler.fit_transform(df[['RSI', 'MACD']])
+    data_tensor = torch.tensor(df[['RSI', 'MACD']].values, dtype=torch.float32)
+
+    input_size = 2 
+    hidden_size = 64 
+    num_layers = 2 if timeframe == '5_min' else 4
+    loaded_model = PriceChangePredictorLSTM(input_size, hidden_size, num_layers)
+    loaded_model.load_state_dict(torch.load(modelMap[timeframe]))
+    loaded_model.eval()
+
+    with torch.no_grad():
+        predictions = loaded_model(data_tensor.unsqueeze(1))
+    
+    df['WRM'] = predictions.view(-1).numpy()
+
+    return df
 
 hdfs_path="hdfs://hadoop:9900/nifty_data/"
 
@@ -37,7 +77,10 @@ def get_minute_data():
         'close': data['close'],
         'high': data['high'],
         'low': data['low'],
-        'volume': data['volume']
+        'volume': data['volume'],
+        'RSI': data['RSI'],
+        'MACD': data['MACD'],
+        "WRM": 0
     }
     
     result = json.dumps(result, cls=NpEncoder)
@@ -50,13 +93,17 @@ def get_five_minute_data():
     data = df.loc[0]
     df.drop(index=df.iloc[0].name, inplace=True)
     df.to_csv(relpath('dataset/NIFTY_5_min_ISO.csv'), index=False)
+    data = getWRMIndicator('5_min', df)
     result = {
         'date': data['time'],
         'open': data['open'],
         'close': data['close'],
         'high': data['high'],
         'low': data['low'],
-        'volume': data['volume']
+        'volume': data['volume'],
+        'RSI': data['RSI'],
+        'MACD': data['MACD'],
+        'WRM': data['WRM']
     }
     
     result = json.dumps(result, cls=NpEncoder)
@@ -69,13 +116,17 @@ def get_fifteen_minute_data():
     data = df.loc[0]
     df.drop(index=df.iloc[0].name, inplace=True)
     df.to_csv(relpath('dataset/NIFTY_15_min_ISO.csv'), index=False)
+    data = getWRMIndicator('15_min', df)
     result = {
         'date': data['time'],
         'open': data['open'],
         'close': data['close'],
         'high': data['high'],
         'low': data['low'],
-        'volume': data['volume']
+        'volume': data['volume'],
+        'RSI': data['RSI'],
+        'MACD': data['MACD'],
+        'WRM': data['WRM']
     }
     
     result = json.dumps(result, cls=NpEncoder)
@@ -88,13 +139,17 @@ def get_one_hour_data():
     data = df.loc[0]
     df.drop(index=df.iloc[0].name, inplace=True)
     df.to_csv(relpath('dataset/NIFTY_1_hr_ISO.csv'), index=False)
+    data = getWRMIndicator('1_hr', df)
     result = {
         'date': data['time'],
         'open': data['open'],
         'close': data['close'],
         'high': data['high'],
         'low': data['low'],
-        'volume': data['volume']
+        'volume': data['volume'],
+        'RSI': data['RSI'],
+        'MACD': data['MACD'],
+        'WRM': data['WRM']
     }
     
     result = json.dumps(result, cls=NpEncoder)
@@ -107,13 +162,17 @@ def get_one_day_data():
     data = df.loc[0]
     df.drop(index=df.iloc[0].name, inplace=True)
     df.to_csv(relpath('dataset/NIFTY_1_day_ISO.csv'), index=False)
+    data = getWRMIndicator('1_day', df)
     result = {
         'date': data['time'],
         'open': data['open'],
         'close': data['close'],
         'high': data['high'],
         'low': data['low'],
-        'volume': data['volume']
+        'volume': data['volume'],
+        'RSI': data['RSI'],
+        'MACD': data['MACD'],
+        'WRM': data['WRM']
     }
     
     result = json.dumps(result, cls=NpEncoder)
@@ -163,17 +222,35 @@ timeMap = {
 
 @app.route('/batch/niftyData/<timeframe>/<qty>', methods=['GET'])
 def get_csv_data(timeframe, qty):
+    if timeframe != '1_min':
+        input_size = 2
+        hidden_size = 64
+        if timeframe == '5_min': 
+            num_layers = 2 
+        else:
+            num_layers = 4
+        loaded_model = PriceChangePredictorLSTM(input_size, hidden_size, num_layers)
+        loaded_model.load_state_dict(torch.load(modelMap[timeframe]))
+        loaded_model.eval()
+        scaler = StandardScaler()
+
     try:
         with hdfs.open(hdfs_path+timeMap[timeframe], 'r') as f:
-            if timeframe == '1_min':
-                df = pd.read_csv(f)
-            else:
-                df = pd.read_csv(f, names=['date', 'open', 'close', 'low', 'high', 'volume'])
-
+            df = pd.read_csv(f)
             df = df.tail(int(qty))
-            df['RSI'] = calculate_rsi(df)
             df['SMA'] = calculate_sma(df)
             df['MFI'] = calculate_mfi(df)
+
+            if timeframe != '1_min':
+                df[['RSI', 'MACD']] = scaler.fit_transform(df[['RSI', 'MACD']])
+                data_tensor = torch.tensor(df[['RSI', 'MACD']].values, dtype=torch.float32)
+                with torch.no_grad():
+                    predictions = loaded_model(data_tensor.unsqueeze(1))
+                
+                df['WRM'] = predictions.view(-1).numpy()
+            else:
+                df['WRM'] = 0
+
             data = []
             for _, row in df.iterrows():
                 data.append({
@@ -182,7 +259,9 @@ def get_csv_data(timeframe, qty):
                     "RSI": row['RSI'],
                     "SMA": row['SMA'],
                     "MFI": row['MFI'],
-                    'volume': row['volume']
+                    "MACD": row['MACD'],
+                    'volume': row['volume'],
+                    "WRM": row['WRM']
                 })
             
             f.close()
