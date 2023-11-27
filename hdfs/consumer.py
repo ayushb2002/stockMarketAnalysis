@@ -3,7 +3,7 @@ import json
 import pydoop.hdfs as hdfs
 
 consumer = KafkaConsumer(
-    'StockStream', 
+    'NiftyStream', 
     bootstrap_servers=['kafka:9092'], 
     auto_offset_reset='latest',
     enable_auto_commit=True,

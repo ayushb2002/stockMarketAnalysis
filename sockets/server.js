@@ -11,7 +11,7 @@ app.use(cors());
 
 const Consumer = kafka.Consumer;
 const client = new kafka.KafkaClient('kafka:9092');
-const consumer = new Consumer(client, [{ topic: 'StockStream', partition: 0 }, { topic: 'StockStream', partition: 1 }, { topic: 'StockStream', partition: 2 }], {
+const consumer = new Consumer(client, [{ topic: 'NiftyStream', partition: 0 }, { topic: 'NiftyStream', partition: 1 }, { topic: 'NiftyStream', partition: 2 }], {
   autoCommit: false,
 });
 

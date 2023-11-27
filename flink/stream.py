@@ -31,9 +31,9 @@ t_env.use_catalog("myhive")
 #     volume_val DOUBLE
 #     ) WITH (
 #     'connector' = 'kafka',
-#     'topic' = 'StockStream',
+#     'topic' = 'NiftyStream',
 #     'properties.bootstrap.servers' = 'kafka:9092',
-#     'properties.group.id' = 'StockStream',
+#     'properties.group.id' = 'NiftyStream',
 #     'scan.startup.mode' = 'latest-offset',
 #     'format' = 'json'
 #     )
